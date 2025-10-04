@@ -24,6 +24,33 @@ cd "$(dirname "$0")"
 PROJECT_DIR=$(pwd)
 
 # ============================================
+# 0. VERIFICAR CONFIGURACION (.env)
+# ============================================
+if [ ! -f ".env" ]; then
+    echo -e "${YELLOW}⚙️  [0/5] Configuracion inicial requerida...${NC}"
+    echo -e "   ${YELLOW}No se encontro archivo .env${NC}"
+    echo ""
+    
+    # Ejecutar setup_env.sh
+    if [ -f "setup_env.sh" ]; then
+        chmod +x setup_env.sh
+        ./setup_env.sh
+        
+        # Verificar si se creo el .env
+        if [ ! -f ".env" ]; then
+            echo -e "   ${RED}❌ No se pudo crear el archivo .env${NC}"
+            echo -e "   ${YELLOW}Ejecuta manualmente: ./setup_env.sh${NC}"
+            exit 1
+        fi
+        echo ""
+    else
+        echo -e "   ${RED}❌ setup_env.sh no encontrado${NC}"
+        echo -e "   ${YELLOW}Crea manualmente un archivo .env con las credenciales${NC}"
+        exit 1
+    fi
+fi
+
+# ============================================
 # 1. VERIFICAR PYTHON
 # ============================================
 echo -e "${YELLOW}🔍 [1/5] Verificando Python...${NC}"

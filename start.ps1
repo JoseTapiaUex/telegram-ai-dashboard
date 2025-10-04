@@ -17,6 +17,34 @@ Write-Host ""
 Set-Location $PSScriptRoot
 
 # ============================================
+# 0. VERIFICAR CONFIGURACION (.env)
+# ============================================
+if (-not (Test-Path ".env")) {
+    Write-Host "⚙️  [0/5] Configuracion inicial requerida..." -ForegroundColor Yellow
+    Write-Host "   No se encontro archivo .env" -ForegroundColor Yellow
+    Write-Host ""
+    
+    # Ejecutar setup_env.ps1
+    if (Test-Path "setup_env.ps1") {
+        & .\setup_env.ps1
+        
+        # Verificar si se creo el .env
+        if (-not (Test-Path ".env")) {
+            Write-Host "   ❌ No se pudo crear el archivo .env" -ForegroundColor Red
+            Write-Host "   Ejecuta manualmente: .\setup_env.ps1" -ForegroundColor Yellow
+            Read-Host "Presiona Enter para salir"
+            exit 1
+        }
+        Write-Host ""
+    } else {
+        Write-Host "   ❌ setup_env.ps1 no encontrado" -ForegroundColor Red
+        Write-Host "   Crea manualmente un archivo .env con las credenciales" -ForegroundColor Yellow
+        Read-Host "Presiona Enter para salir"
+        exit 1
+    }
+}
+
+# ============================================
 # 1. VERIFICAR PYTHON
 # ============================================
 Write-Host "🔍 [1/5] Verificando Python..." -ForegroundColor Yellow
