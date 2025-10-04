@@ -1,0 +1,21 @@
+# Core dependencies
+python-dotenv==1.1.1
+
+# Telegram integration
+telethon==1.41.2
+
+# Web scraping and parsing
+requests==2.32.4
+beautifulsoup4==4.13.5
+lxml==6.0.2
+lxml_html_clean==0.4.3
+
+# Browser automation (for anti-bot sites)
+playwright==1.55.0
+
+# Backend API
+Flask==3.1.2
+flask-cors==6.0.1
+
+# Optional: AI integration (not currently used)
+# anthropic==0.68.0

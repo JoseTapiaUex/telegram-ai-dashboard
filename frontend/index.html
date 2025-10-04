@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="description" content="Dashboard de monitorización de contenido desde Telegram">
+    <title>Telegram AI Dashboard - Monitorización Inteligente</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --accent-color: #06b6d4;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Header con imagen de fondo */
+        .header {
+            position: relative;
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%),
+                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            padding: 4rem 1.5rem 3rem;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.3), transparent);
+            pointer-events: none;
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .header-subtitle {
+            font-size: 1.125rem;
+            opacity: 0.95;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .refresh-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .refresh-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .refresh-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        .refresh-info {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.8125rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.primary { background: rgba(30, 58, 138, 0.1); color: var(--primary-color); }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .stat-icon.info { background: rgba(6, 182, 212, 0.1); color: var(--accent-color); }
+
+        .stat-content h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-content p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* News Grid - Responsive */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* Tablet: 2 columnas */
+        @media (min-width: 768px) {
+            .news-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Desktop: 3 columnas */
+        @media (min-width: 1280px) {
+            .news-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* News Card */
+        .news-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--secondary-color);
+        }
+
+        .news-image-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .news-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .news-card:hover .news-image {
+            transform: scale(1.05);
+        }
+
+        .news-image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3));
+        }
+
+        .news-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .news-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.375rem 0.875rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .news-date {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .news-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-summary {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.9375rem;
+        }
+
+        .news-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            gap: 1rem;
+        }
+
+        .news-provider {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .news-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .news-link:hover {
+            background: var(--secondary-color);
+            transform: translateX(2px);
+        }
+
+        .news-link:active {
+            transform: scale(0.98);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filter-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .filter-chip.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .filter-chip .count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-chip.active .count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Empty State */
+        .no-posts {
+            text-align: center;
+            padding: 4rem 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 2px dashed var(--border-color);
+        }
+
+        .no-posts-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-posts h3 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .no-posts p {
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Typography */
+        @media (max-width: 640px) {
+            .header {
+                padding: 3rem 1rem 2rem;
+                background-attachment: scroll;
+            }
+
+            .header-main {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+            }
+
+            .header-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-right {
+                align-self: stretch;
+            }
+
+            .refresh-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .refresh-info {
+                justify-content: center;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .header-subtitle {
+                font-size: 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .filter-bar {
+                padding: 1rem;
+            }
+
+            .filter-chips {
+                gap: 0.5rem;
+            }
+
+            .filter-chip {
+                padding: 0.5rem 1rem;
+                font-size: 0.8125rem;
+            }
+
+            .news-image-container {
+                height: 180px;
+            }
+
+            .news-content {
+                padding: 1.25rem;
+            }
+
+            .news-title {
+                font-size: 1.125rem;
+            }
+        }
+
+        /* Touch optimization for mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .news-card:active {
+                transform: scale(0.98);
+            }
+
+            .news-link {
+                min-height: 44px;
+                padding: 0.75rem 1.5rem;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0f172a;
+                --bg-secondary: #1e293b;
+                --text-primary: #f1f5f9;
+                --text-secondary: #94a3b8;
+                --border-color: #334155;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-main">
+                <div class="header-left">
+                    <div class="header-icon">🤖</div>
+                    <div>
+                        <h1>Telegram AI Dashboard</h1>
+                        <div class="header-subtitle">
+                            <span>Monitorización Inteligente de Contenido</span>
+                            <span class="header-badge">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                test-ia-agents
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button id="refresh-btn" class="refresh-btn" title="Actualizar contenido ahora">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Actualizar</span>
+                    </button>
+                    <div class="refresh-info">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Auto-refresh cada 5 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-icon primary">📊</div>
+                <div class="stat-content">
+                    <h3 id="total-posts">0</h3>
+                    <p>Posts Totales</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">✨</div>
+                <div class="stat-content">
+                    <h3 id="today-posts">0</h3>
+                    <p>Hoy</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon info">🔄</div>
+                <div class="stat-content">
+                    <h3 id="last-update">--:--</h3>
+                    <p>Última Actualización</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar" id="filter-bar" style="display: none;">
+            <div class="filter-header">
+                <h3>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    Filtrar por tipo
+                </h3>
+            </div>
+            <div class="filter-chips" id="filter-chips">
+                <!-- Se generan dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Cargando contenido...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/posts';
+        const REFRESH_API_URL = 'http://localhost:5000/api/refresh';
+        const REFRESH_INTERVAL = 300000; // 5 minutos (300,000 ms)
+        
+        // Estado global
+        let allPosts = [];
+        let activeFilter = 'Todos';
+
+        // Generar URL de imagen basada en el contenido del post
+        function getSmartImageUrl(post) {
+            // 1. Si tiene imagen y NO es DiceBear, usarla
+            if (post.image_url && !post.image_url.includes('dicebear.com')) {
+                return post.image_url;
+            }
+
+            // 2. Generar hash simple del ID para consistencia
+            const hash = Math.abs(hashCode(post.id.toString() + post.title));
+
+            // 3. Mapeo de colores según tipo de contenido
+            const colorSchemes = {
+                'Noticia': ['4158D0', '7E22CE', 'C850C0'],
+                'Artículo': ['0093E9', '80D0C7', '13547A'],
+                'Blog': ['8EC5FC', 'E0C3FC', '667eea'],
+                'Artículo de Blog': ['FA8BFF', '2BD2FF', '2BFF88'],
+                'Red Social': ['FF6B95', 'FFE66D', '4FACFE'],
+                'Investigación': ['667eea', '764ba2', '8E2DE2'],
+                'Video': ['FF0844', 'FFB199', 'F35588'],
+                'default': ['667eea', '764ba2', 'F093FB']
+            };
+
+            const type = post.type || 'default';
+            const colors = colorSchemes[type] || colorSchemes['default'];
+            const colorIndex = hash % colors.length;
+            const color1 = colors[colorIndex];
+            const color2 = colors[(colorIndex + 1) % colors.length];
+
+            // 4. Múltiples servicios de fallback (en orden de preferencia)
+            const fallbackServices = [
+                // Picsum Photos - fotos reales con ID consistente
+                `https://picsum.photos/seed/${hash}/800/600`,
+                
+                // Gradient Avatar - gradientes bonitos y abstractos
+                `https://avatar.vercel.sh/${encodeURIComponent(post.title.substring(0, 50))}?size=600`,
+                
+                // UI Avatars - iniciales del título en estilo profesional
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(post.title.substring(0, 30))}&size=600&background=${color1}&color=fff&bold=true&font-size=0.4`,
+                
+                // Boring Avatars - diseños geométricos únicos
+                `https://source.boringavatars.com/marble/600/${encodeURIComponent(post.title)}?colors=${colors.join(',')}`,
+                
+                // Gradiente CSS como último recurso
+                createGradientDataUrl(color1, color2, post.title)
+            ];
+
+            // Seleccionar servicio basado en el hash para consistencia
+            const serviceIndex = hash % (fallbackServices.length - 1); // -1 para no usar gradiente CSS como primera opción
+            return fallbackServices[serviceIndex];
+        }
+
+        // Función hash simple para generar números consistentes
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return hash;
+        }
+
+        // Crear gradiente como Data URL (último fallback)
+        function createGradientDataUrl(color1, color2, title) {
+            const svg = `
+                <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#${color1};stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#${color2};stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="800" height="600" fill="url(#grad)"/>
+                    <text x="50%" y="50%" text-anchor="middle" fill="white" font-size="48" font-family="Arial, sans-serif" font-weight="bold" opacity="0.9">
+                        ${escapeHtml(title.substring(0, 40))}...
+                    </text>
+                </svg>
+            `.trim();
+            return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+        }
+
+        // Mejorar el manejo de errores de imagen con cascada de fallbacks
+        function handleImageError(img, post) {
+            const currentSrc = img.src;
+            
+            // Lista de todos los fallbacks posibles
+            const allFallbacks = [
+                `https://picsum.photos/seed/${Math.abs(hashCode(post.id.toString()))}/800/600`,
+                `https://avatar.vercel.sh/${encodeURIComponent(post.title.substring(0, 50))}?size=600`,
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(post.title.substring(0, 30))}&size=600&background=667eea&color=fff&bold=true`,
+                `https://source.boringavatars.com/marble/600/${encodeURIComponent(post.title)}`,
+                createGradientDataUrl('667eea', '764ba2', post.title)
+            ];
+            
+            // Encontrar el siguiente fallback que no hemos usado
+            for (let fallback of allFallbacks) {
+                if (!currentSrc.includes(fallback.substring(0, 30))) {
+                    img.src = fallback;
+                    return;
+                }
+            }
+        }
+
+        async function loadPosts() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Error al cargar posts');
+                const posts = await response.json();
+                
+                // Ordenar posts: más recientes primero (basado en ID descendente o fecha)
+                posts.sort((a, b) => {
+                    // Primero intentar por fecha
+                    const dateA = new Date(a.release_date);
+                    const dateB = new Date(b.release_date);
+                    if (dateA.getTime() !== dateB.getTime()) {
+                        return dateB - dateA; // Más reciente primero
+                    }
+                    // Si las fechas son iguales, ordenar por ID descendente
+                    return b.id - a.id;
+                });
+
+                allPosts = posts;
+                updateStats(posts);
+                updateFilters(posts);
+                renderPosts(getFilteredPosts());
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="no-posts">
+                        <div class="no-posts-icon">⚠️</div>
+                        <h3>Error al cargar las noticias</h3>
+                        <p>Asegúrate de que el servidor backend esté corriendo en http://localhost:5000</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function refreshFromTelegram() {
+            try {
+                // Ejecutar el monitor de Telegram
+                const response = await fetch(REFRESH_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al ejecutar el monitor de Telegram');
+                }
+                
+                const result = await response.json();
+                console.log('Monitor ejecutado:', result);
+                
+                // Recargar posts después de buscar en Telegram
+                await loadPosts();
+                
+                return true;
+            } catch (error) {
+                console.error('Error al refrescar desde Telegram:', error);
+                throw error;
+            }
+        }
+
+        function getFilteredPosts() {
+            if (activeFilter === 'Todos') {
+                return allPosts;
+            }
+            
+            if (activeFilter === 'Otros') {
+                // Obtener los tipos principales
+                const typeCounts = {};
+                allPosts.forEach(post => {
+                    const type = post.type || 'Contenido';
+                    typeCounts[type] = (typeCounts[type] || 0) + 1;
+                });
+                
+                const sortedTypes = Object.entries(typeCounts)
+                    .sort((a, b) => b[1] - a[1]);
+                const mainTypes = sortedTypes.slice(0, 5).map(([type]) => type);
+                
+                // Retornar posts que NO están en las categorías principales
+                return allPosts.filter(post => {
+                    const type = post.type || 'Contenido';
+                    return !mainTypes.includes(type);
+                });
+            }
+            
+            return allPosts.filter(post => (post.type || 'Contenido') === activeFilter);
+        }
+
+        function updateFilters(posts) {
+            const filterBar = document.getElementById('filter-bar');
+            const filterChips = document.getElementById('filter-chips');
+            
+            if (posts.length === 0) {
+                filterBar.style.display = 'none';
+                return;
+            }
+
+            filterBar.style.display = 'block';
+
+            // Contar posts por tipo
+            const typeCounts = {};
+            posts.forEach(post => {
+                const type = post.type || 'Contenido';
+                typeCounts[type] = (typeCounts[type] || 0) + 1;
+            });
+
+            // Iconos por tipo
+            const typeIcons = {
+                'Todos': '📑',
+                'Noticia': '📰',
+                'Artículo': '📝',
+                'Blog': '✍️',
+                'Artículo de Blog': '📄',
+                'Red Social': '💬',
+                'Investigación': '🔬',
+                'Video': '🎥',
+                'Otros': '📦',
+                'Contenido': '📌'
+            };
+
+            // Crear chips de filtro
+            filterChips.innerHTML = '';
+
+            // Chip "Todos"
+            const allChip = createFilterChip('Todos', posts.length, typeIcons['Todos'], activeFilter === 'Todos');
+            filterChips.appendChild(allChip);
+
+            // Ordenar tipos por cantidad
+            const sortedTypes = Object.entries(typeCounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            // Límite de categorías principales
+            const MAX_MAIN_CATEGORIES = 5;
+            const mainTypes = sortedTypes.slice(0, MAX_MAIN_CATEGORIES);
+            const otherTypes = sortedTypes.slice(MAX_MAIN_CATEGORIES);
+
+            // Crear chips para las categorías principales
+            mainTypes.forEach(([type, count]) => {
+                const icon = typeIcons[type] || typeIcons['Contenido'];
+                const chip = createFilterChip(type, count, icon, activeFilter === type);
+                filterChips.appendChild(chip);
+            });
+
+            // Si hay más categorías, crear chip "Otros"
+            if (otherTypes.length > 0) {
+                const otherCount = otherTypes.reduce((sum, [, count]) => sum + count, 0);
+                const othersChip = createFilterChip('Otros', otherCount, typeIcons['Otros'], activeFilter === 'Otros');
+                filterChips.appendChild(othersChip);
+            }
+        }
+
+        function createFilterChip(type, count, icon, isActive) {
+            const chip = document.createElement('button');
+            chip.className = 'filter-chip' + (isActive ? ' active' : '');
+            chip.innerHTML = `
+                <span>${icon}</span>
+                <span>${type}</span>
+                <span class="count">${count}</span>
+            `;
+            chip.onclick = () => {
+                activeFilter = type;
+                updateFilters(allPosts);
+                renderPosts(getFilteredPosts());
+            };
+            return chip;
+        }
+
+        function updateStats(posts) {
+            const statsBar = document.getElementById('stats-bar');
+            statsBar.style.display = 'grid';
+
+            // Total posts
+            document.getElementById('total-posts').textContent = posts.length;
+
+            // Posts de hoy
+            const today = new Date().toISOString().split('T')[0];
+            const todayPosts = posts.filter(post => post.release_date.startsWith(today));
+            document.getElementById('today-posts').textContent = todayPosts.length;
+
+            // Última actualización
+            const now = new Date();
+            document.getElementById('last-update').textContent = 
+                now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function renderPosts(posts) {
+            const content = document.getElementById('content');
+            
+            if (posts.length === 0) {
+                const emptyMessage = activeFilter === 'Todos' 
+                    ? 'Los posts aparecerán aquí cuando sean procesados desde Telegram'
+                    : `No hay posts del tipo "${activeFilter}"`;
+                
+                content.innerHTML = `
+                    <div class="no-posts">
+                        <div class="no-posts-icon">📭</div>
+                        <h3>No hay contenido disponible</h3>
+                        <p>${emptyMessage}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'news-grid';
+
+            posts.forEach(post => {
+                const card = document.createElement('article');
+                card.className = 'news-card';
+                
+                const imageUrl = getSmartImageUrl(post);
+                
+                // Crear contenedor de imagen
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'news-image-container';
+                
+                // Crear imagen
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = post.title;
+                img.className = 'news-image';
+                img.loading = 'lazy';
+                img.onerror = function() { handleImageError(this, post); };
+                
+                // Crear overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'news-image-overlay';
+                
+                imageContainer.appendChild(img);
+                imageContainer.appendChild(overlay);
+                card.appendChild(imageContainer);
+
+                // Crear contenido
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'news-content';
+                contentDiv.innerHTML = `
+                    <div class="news-meta">
+                        <span class="news-type">${post.type || 'Contenido'}</span>
+                        <span class="news-date">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            ${formatDate(post.release_date)}
+                        </span>
+                    </div>
+                    <h2 class="news-title">${escapeHtml(post.title)}</h2>
+                    <p class="news-summary">${escapeHtml(post.summary)}</p>
+                    <div class="news-footer">
+                        <span class="news-provider">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                            ${escapeHtml(post.provider || 'Fuente')}
+                        </span>
+                        <a href="${post.source_url}" target="_blank" rel="noopener noreferrer" class="news-link">
+                            Leer más
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                `;
+                
+                card.appendChild(contentDiv);
+                grid.appendChild(card);
+            });
+
+            content.innerHTML = '';
+            content.appendChild(grid);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                return 'Hoy';
+            } else if (diffDays === 1) {
+                return 'Ayer';
+            } else if (diffDays < 7) {
+                return `Hace ${diffDays} días`;
+            } else {
+                return date.toLocaleDateString('es-ES', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Manejar botón de actualización manual
+        document.getElementById('refresh-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                // Ejecutar búsqueda en Telegram y luego cargar posts
+                await refreshFromTelegram();
+                
+                // Mostrar feedback visual
+                btn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>¡Actualizado!</span>
+                `;
+                
+                setTimeout(() => {
+                    btn.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Actualizar</span>
+                    `;
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                btn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    <span>Error</span>
+                `;
+                
+                setTimeout(() => {
+                    btn.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Actualizar</span>
+                    `;
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }, 2000);
+            }
+        });
+
+        // Initial load (solo cargar posts, no buscar en Telegram al inicio)
+        loadPosts();
+        
+        // Auto-refresh cada 5 minutos (busca en Telegram y actualiza)
+        setInterval(async () => {
+            console.log('Auto-refresh: Buscando nuevos posts en Telegram...');
+            try {
+                await refreshFromTelegram();
+            } catch (error) {
+                console.error('Error en auto-refresh:', error);
+                // Si falla, al menos intentar cargar los posts existentes
+                await loadPosts();
+            }
+        }, REFRESH_INTERVAL);
+    </script>
+</body>
+</html>
