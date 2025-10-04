@@ -20,7 +20,7 @@ function Show-Header {
 }
 
 # Funcion para validar que un valor no este vacio
-function Validate-NotEmpty {
+function Test-NotEmpty {
     param([string]$Value, [string]$FieldName)
     
     if ([string]::IsNullOrWhiteSpace($Value)) {
@@ -31,7 +31,7 @@ function Validate-NotEmpty {
 }
 
 # Funcion para validar numero
-function Validate-Number {
+function Test-IsNumber {
     param([string]$Value, [string]$FieldName)
     
     if (-not ($Value -match '^\d+$')) {
@@ -42,7 +42,7 @@ function Validate-Number {
 }
 
 # Funcion para validar formato de telefono
-function Validate-Phone {
+function Test-PhoneFormat {
     param([string]$Value)
     
     if (-not ($Value -match '^\+\d{10,15}$')) {
@@ -53,7 +53,7 @@ function Validate-Phone {
 }
 
 # Funcion para validar ID de grupo (negativo)
-function Validate-GroupId {
+function Test-GroupIdFormat {
     param([string]$Value)
     
     if (-not ($Value -match '^-\d+$')) {
@@ -112,13 +112,13 @@ Write-Host ""
 # Pedir TG_APP_ID
 do {
     $TG_APP_ID = Read-Host "Ingresa tu TG_APP_ID (api_id)"
-    $valid = (Validate-NotEmpty $TG_APP_ID "TG_APP_ID") -and (Validate-Number $TG_APP_ID "TG_APP_ID")
+    $valid = (Test-NotEmpty $TG_APP_ID "TG_APP_ID") -and (Test-IsNumber $TG_APP_ID "TG_APP_ID")
 } while (-not $valid)
 
 # Pedir TG_API_HASH
 do {
     $TG_API_HASH = Read-Host "Ingresa tu TG_API_HASH (api_hash)"
-    $valid = Validate-NotEmpty $TG_API_HASH "TG_API_HASH"
+    $valid = Test-NotEmpty $TG_API_HASH "TG_API_HASH"
 } while (-not $valid)
 
 # Pedir TG_PHONE
@@ -127,7 +127,7 @@ do {
     Write-Host "Formato del telefono: +[codigo pais][numero]" -ForegroundColor Yellow
     Write-Host "Ejemplos: +34612345678 (Espana), +1234567890 (EE.UU.)" -ForegroundColor Gray
     $TG_PHONE = Read-Host "Ingresa tu numero de telefono"
-    $valid = (Validate-NotEmpty $TG_PHONE "TG_PHONE") -and (Validate-Phone $TG_PHONE)
+    $valid = (Test-NotEmpty $TG_PHONE "TG_PHONE") -and (Test-PhoneFormat $TG_PHONE)
 } while (-not $valid)
 
 Write-Host ""
@@ -195,7 +195,7 @@ Write-Host ""
 # Pedir TELEGRAM_GROUP_ID
 do {
     $TELEGRAM_GROUP_ID = Read-Host "Ingresa el TELEGRAM_GROUP_ID"
-    $valid = (Validate-NotEmpty $TELEGRAM_GROUP_ID "TELEGRAM_GROUP_ID") -and (Validate-GroupId $TELEGRAM_GROUP_ID)
+    $valid = (Test-NotEmpty $TELEGRAM_GROUP_ID "TELEGRAM_GROUP_ID") -and (Test-GroupIdFormat $TELEGRAM_GROUP_ID)
 } while (-not $valid)
 
 Write-Host ""
@@ -217,7 +217,7 @@ if ($useAnthropic -eq "S" -or $useAnthropic -eq "s") {
     Write-Host "Obten tu API Key en: https://console.anthropic.com/settings/keys" -ForegroundColor Gray
     $ANTHROPIC_API_KEY = Read-Host "Ingresa tu ANTHROPIC_API_KEY"
     
-    if (Validate-NotEmpty $ANTHROPIC_API_KEY "ANTHROPIC_API_KEY") {
+    if (Test-NotEmpty $ANTHROPIC_API_KEY "ANTHROPIC_API_KEY") {
         $USE_ANTHROPIC = "true"
         Write-Host "Anthropic API habilitada" -ForegroundColor Green
     } else {
