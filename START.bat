@@ -9,6 +9,5 @@ echo ========================================
 echo.
 
 REM Ejecutar el script de PowerShell
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0start.ps1"
 
 pause
