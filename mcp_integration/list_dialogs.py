@@ -45,8 +45,9 @@ if not (TG_APP_ID and TG_API_HASH):
 
 async def list_dialogs():
     """Lista todos los diálogos/chats disponibles"""
-    # Crear cliente (usamos una sesión local)
-    session_name = "telegram_dashboard_session"
+    # Crear cliente (usamos una sesión local en el mismo directorio que este script)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    session_name = os.path.join(script_dir, "telegram_dashboard_session")
     
     client = TelegramClient(session_name, TG_APP_ID, TG_API_HASH)
     

@@ -26,8 +26,9 @@ PROJECT_DIR=$(pwd)
 # ============================================
 # 0. VERIFICAR CONFIGURACION (.env)
 # ============================================
+IS_FIRST_RUN=false
 if [ ! -f ".env" ]; then
-    echo -e "${YELLOW}⚙️  [0/5] Configuracion inicial requerida...${NC}"
+    echo -e "${YELLOW}⚙️  [0/7] Configuracion inicial requerida...${NC}"
     echo -e "   ${YELLOW}No se encontro archivo .env${NC}"
     echo ""
     
@@ -42,6 +43,7 @@ if [ ! -f ".env" ]; then
             echo -e "   ${YELLOW}Ejecuta manualmente: ./setup_env.sh${NC}"
             exit 1
         fi
+        IS_FIRST_RUN=true
         echo ""
     else
         echo -e "   ${RED}❌ setup_env.sh no encontrado${NC}"
@@ -53,7 +55,7 @@ fi
 # ============================================
 # 1. VERIFICAR PYTHON
 # ============================================
-echo -e "${YELLOW}🔍 [1/5] Verificando Python...${NC}"
+echo -e "${YELLOW}🔍 [1/6] Verificando Python...${NC}"
 if command -v python3 &> /dev/null; then
     PYTHON_CMD="python3"
     PYTHON_VERSION=$(python3 --version)
@@ -72,7 +74,7 @@ echo ""
 # ============================================
 # 2. INSTALAR DEPENDENCIAS
 # ============================================
-echo -e "${YELLOW}📦 [2/5] Verificando dependencias...${NC}"
+echo -e "${YELLOW}📦 [2/6] Verificando dependencias...${NC}"
 
 # Verificar requirements.txt raíz
 if [ -f "requirements.txt" ]; then
@@ -104,7 +106,7 @@ echo ""
 # ============================================
 # 3. VERIFICAR CONFIGURACIÓN
 # ============================================
-echo -e "${YELLOW}⚙️  [3/5] Verificando configuración...${NC}"
+echo -e "${YELLOW}⚙️  [3/7] Verificando configuración...${NC}"
 
 if [ ! -f ".env" ]; then
     echo -e "   ${RED}⚠️  Archivo .env no encontrado${NC}"
@@ -128,7 +130,7 @@ echo ""
 # ============================================
 # 4. INICIAR BACKEND
 # ============================================
-echo -e "${YELLOW}🚀 [4/5] Iniciando Backend Flask...${NC}"
+echo -e "${YELLOW}🚀 [4/7] Iniciando Backend Flask...${NC}"
 
 # Verificar si el puerto 5000 está en uso
 if lsof -Pi :5000 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
@@ -181,9 +183,32 @@ done
 echo ""
 
 # ============================================
-# 5. ABRIR FRONTEND
+# 6. CARGAR POSTS INICIALES (Primera ejecución - DESPUÉS de iniciar backend)
 # ============================================
-echo -e "${YELLOW}🌐 [5/5] Abriendo Dashboard en el navegador...${NC}"
+if [ "$IS_FIRST_RUN" = true ]; then
+    echo -e "${YELLOW}📥 [6/7] Cargando posts iniciales desde Telegram...${NC}"
+    echo -e "   ${CYAN}Esta es tu primera ejecución, vamos a buscar posts en tu grupo${NC}"
+    echo -e "   ${CYAN}Esperando 2 segundos para que el backend se estabilice...${NC}"
+    sleep 2
+    echo ""
+    
+    export PYTHONIOENCODING='utf-8'
+    if $PYTHON_CMD mcp_integration/telegram_mcp.py; then
+        echo ""
+        echo -e "   ${GREEN}✅ Posts iniciales cargados exitosamente${NC}"
+        echo -e "   ${CYAN}Recarga el dashboard (F5) para ver los posts${NC}"
+    else
+        echo ""
+        echo -e "   ${YELLOW}⚠️  Hubo un problema al cargar los posts iniciales${NC}"
+        echo -e "   ${CYAN}Puedes usar el boton 'Actualizar' en el dashboard mas tarde${NC}"
+    fi
+    echo ""
+fi
+
+# ============================================
+# 7. ABRIR FRONTEND
+# ============================================
+echo -e "${YELLOW}🌐 [7/7] Abriendo Dashboard en el navegador...${NC}"
 
 # Detectar sistema operativo para abrir navegador
 if [[ "$OSTYPE" == "darwin"* ]]; then

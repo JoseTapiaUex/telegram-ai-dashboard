@@ -1,5 +1,4 @@
-# Telegram AI Dashboard - Script de Inicio Completo
-# Configura el entorno, instala dependencias, inicia backend y abre el frontend
+# Telegram AI Dashboard - Script de Inicio CompletoWrite-Host "🔍 [1/7] Verificando Python..." -ForegroundColor Yellow# Configura elWrite-Host "📦 [2/7] Verificando dependencias..." -ForegroundColor Yellowentorno, instala dependencias, inicia backend y abre el frontend
 # Compatible con Windows (PowerShell)
 
 # Configuración de encoding para evitar problemas con emojis
@@ -19,8 +18,10 @@ Set-Location $PSScriptRoot
 # ============================================
 # 0. VERIFICAR CONFIGURACION (.env)
 # ============================================
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'isFirstRun')]
+$isFirstRun = $false
 if (-not (Test-Path ".env")) {
-    Write-Host "⚙️  [0/5] Configuracion inicial requerida..." -ForegroundColor Yellow
+    Write-Host "⚙️  [0/7] Configuracion inicial requerida..." -ForegroundColor Yellow
     Write-Host "   No se encontro archivo .env" -ForegroundColor Yellow
     Write-Host ""
     
@@ -35,6 +36,7 @@ if (-not (Test-Path ".env")) {
             Read-Host "Presiona Enter para salir"
             exit 1
         }
+        $isFirstRun = $true
         Write-Host ""
     } else {
         Write-Host "   ❌ setup_env.ps1 no encontrado" -ForegroundColor Red
@@ -97,7 +99,7 @@ Write-Host ""
 # ============================================
 # 3. VERIFICAR CONFIGURACIÓN
 # ============================================
-Write-Host "⚙️  [3/5] Verificando configuración..." -ForegroundColor Yellow
+Write-Host "⚙️  [3/7] Verificando configuración..." -ForegroundColor Yellow
 
 if (-not (Test-Path ".env")) {
     Write-Host "   ⚠️  Archivo .env no encontrado" -ForegroundColor Red
@@ -122,7 +124,7 @@ Write-Host ""
 # ============================================
 # 4. INICIAR BACKEND
 # ============================================
-Write-Host "🚀 [4/5] Iniciando Backend Flask..." -ForegroundColor Yellow
+Write-Host "🚀 [4/7] Iniciando Backend Flask..." -ForegroundColor Yellow
 
 # Verificar si el backend ya está corriendo
 $backendRunning = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue
@@ -173,9 +175,40 @@ while ($elapsed -lt $timeout) {
 Write-Host ""
 
 # ============================================
-# 5. ABRIR FRONTEND
+# 6. CARGAR POSTS INICIALES (Primera ejecución - DESPUÉS de iniciar backend)
 # ============================================
-Write-Host "🌐 [5/5] Abriendo Dashboard en el navegador..." -ForegroundColor Yellow
+if ($isFirstRun) {
+    Write-Host "📥 [6/7] Cargando posts iniciales desde Telegram..." -ForegroundColor Yellow
+    Write-Host "   Esta es tu primera ejecución, vamos a buscar posts en tu grupo" -ForegroundColor Cyan
+    Write-Host "   Esperando 2 segundos para que el backend se estabilice..." -ForegroundColor Gray
+    Start-Sleep -Seconds 2
+    Write-Host ""
+    
+    try {
+        $env:PYTHONIOENCODING = 'utf-8'
+        python mcp_integration/telegram_mcp.py
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host ""
+            Write-Host "   ✅ Posts iniciales cargados exitosamente" -ForegroundColor Green
+            Write-Host "   Recarga el dashboard (F5) para ver los posts" -ForegroundColor Cyan
+        } else {
+            Write-Host ""
+            Write-Host "   ⚠️  Hubo un problema al cargar los posts iniciales" -ForegroundColor Yellow
+            Write-Host "   Puedes usar el boton 'Actualizar' en el dashboard mas tarde" -ForegroundColor Gray
+        }
+    } catch {
+        Write-Host ""
+        Write-Host "   ⚠️  Error al ejecutar el monitor de Telegram" -ForegroundColor Yellow
+        Write-Host "   Puedes usar el boton 'Actualizar' en el dashboard mas tarde" -ForegroundColor Gray
+    }
+    Write-Host ""
+}
+
+# ============================================
+# 7. ABRIR FRONTEND
+# ============================================
+Write-Host "🌐 [7/7] Abriendo Dashboard en el navegador..." -ForegroundColor Yellow
 
 # Intentar abrir en el navegador predeterminado
 try {
